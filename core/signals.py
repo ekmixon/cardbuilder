@@ -10,7 +10,7 @@ from django.dispatch import receiver
 from .models import Card, Category
 from slugify import slugify
 
-    
+
 DEPLOYMENT_TARGET = os.environ.get('DEPLOYMENT_TARGET', None)
 
 if DEPLOYMENT_TARGET == 'production':

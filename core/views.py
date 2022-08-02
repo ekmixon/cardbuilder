@@ -18,10 +18,7 @@ def index(request):
         cards = Card.objects.filter(category=category).filter(published=True)
         cards_list = []
         for card in cards:
-            card_obj = {}
-            card_obj['id'] = card.id
-            card_obj['title'] = card.title
-
+            card_obj = {'id': card.id, 'title': card.title}
             cards_list.append(card_obj)
 
         context['grouped_cards'][category.category_name] = cards_list
@@ -43,11 +40,4 @@ def deep_links(request):
     return render(request, 'deep-links.html', context)
 
 def build_context():
-    config = {}
-
-    # Only all-caps [constant] vars get included
-    for k, v in app_config.__dict__.items():
-        if k.upper() == k:
-            config[k] = v
-
-    return config
+    return {k: v for k, v in app_config.__dict__.items() if k.upper() == k}

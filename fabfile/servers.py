@@ -84,8 +84,10 @@ def checkout_latest(remote='origin'):
     require('settings', provided_by=['production', 'staging'])
     require('branch', provided_by=['stable', 'master', 'branch'])
 
-    run('cd %s; git fetch %s' % (app_config.SERVER_REPOSITORY_PATH, remote))
-    run('cd %s; git checkout %s; git pull %s %s' % (app_config.SERVER_REPOSITORY_PATH, env.branch, remote, env.branch))
+    run(f'cd {app_config.SERVER_REPOSITORY_PATH}; git fetch {remote}')
+    run(
+        f'cd {app_config.SERVER_REPOSITORY_PATH}; git checkout {env.branch}; git pull {remote} {env.branch}'
+    )
 
 @task
 def install_requirements():
@@ -153,25 +155,25 @@ def _get_template_conf_path(service, extension):
     """
     Derive the path for a conf template file.
     """
-    return 'confs/%s.%s' % (service, extension)
+    return f'confs/{service}.{extension}'
 
 def _get_rendered_conf_path(service, extension):
     """
     Derive the rendered path for a conf file.
     """
-    return 'confs/rendered/%s.%s.%s' % (app_config.PROJECT_FILENAME, service, extension)
+    return f'confs/rendered/{app_config.PROJECT_FILENAME}.{service}.{extension}'
 
 def _get_installed_conf_path(service, remote_path, extension):
     """
     Derive the installed path for a conf file.
     """
-    return '%s/%s.%s.%s' % (remote_path, app_config.PROJECT_FILENAME, service, extension)
+    return f'{remote_path}/{app_config.PROJECT_FILENAME}.{service}.{extension}'
 
 def _get_installed_service_name(service):
     """
     Derive the init service name for an installed service.
     """
-    return '%s.%s' % (app_config.PROJECT_FILENAME, service)
+    return f'{app_config.PROJECT_FILENAME}.{service}'
 
 @task
 def render_confs():
@@ -213,28 +215,31 @@ def deploy_confs():
             rendered_path = _get_rendered_conf_path(service, extension)
             installed_path = _get_installed_conf_path(service, remote_path, extension)
 
-            a = local('md5 -q %s' % rendered_path, capture=True)
-            b = run('md5sum %s' % installed_path).split()[0]
+            a = local(f'md5 -q {rendered_path}', capture=True)
+            b = run(f'md5sum {installed_path}').split()[0]
 
             if a != b:
-                logging.info('Updating %s' % installed_path)
+                logging.info(f'Updating {installed_path}')
                 put(rendered_path, installed_path, use_sudo=True)
 
                 if service == 'nginx':
-                    sudo('rm /etc/nginx/sites-enabled/%s.nginx.conf' % app_config.PROJECT_FILENAME)
-                    sudo('ln -s /etc/nginx/sites-available/%s.nginx.conf /etc/nginx/sites-enabled' % app_config.PROJECT_FILENAME)
+                    sudo(f'rm /etc/nginx/sites-enabled/{app_config.PROJECT_FILENAME}.nginx.conf')
+                    sudo(
+                        f'ln -s /etc/nginx/sites-available/{app_config.PROJECT_FILENAME}.nginx.conf /etc/nginx/sites-enabled'
+                    )
+
                     sudo('service nginx restart')
                 elif service == 'uwsgi':
                     service_name = _get_installed_service_name(service)
                     sudo('initctl reload-configuration')
-                    sudo('service %s restart' % service_name)
+                    sudo(f'service {service_name} restart')
                 elif service == 'app':
                     sudo('mkdir /run/uwsgi/')
-                    sudo('touch %s' % app_config.UWSGI_SOCKET_PATH)
-                    sudo('chmod 644 %s' % app_config.UWSGI_SOCKET_PATH)
-                    sudo('chown www-data:www-data %s' % app_config.UWSGI_SOCKET_PATH)
+                    sudo(f'touch {app_config.UWSGI_SOCKET_PATH}')
+                    sudo(f'chmod 644 {app_config.UWSGI_SOCKET_PATH}')
+                    sudo(f'chown www-data:www-data {app_config.UWSGI_SOCKET_PATH}')
             else:
-                logging.info('%s has not changed' % rendered_path)
+                logging.info(f'{rendered_path} has not changed')
 
 @task
 def nuke_confs():
@@ -248,16 +253,16 @@ def nuke_confs():
         with settings(warn_only=True):
             installed_path = _get_installed_conf_path(service, remote_path, extension)
 
-            sudo('rm -f %s' % installed_path)
+            sudo(f'rm -f {installed_path}')
 
             if service == 'nginx':
                 sudo('service nginx reload')
             elif service == 'uwsgi':
                 service_name = _get_installed_service_name(service)
-                sudo('service %s stop' % service_name)
+                sudo(f'service {service_name} stop')
                 sudo('initctl reload-configuration')
             elif service == 'app':
-                sudo('rm %s' % app_config.UWSGI_SOCKET_PATH)
+                sudo(f'rm {app_config.UWSGI_SOCKET_PATH}')
 
 @task
 def start_service(service):
@@ -266,7 +271,7 @@ def start_service(service):
     """
     require('settings', provided_by=['production', 'staging'])
     service_name = _get_installed_service_name(service)
-    sudo('service %s start' % service_name)
+    sudo(f'service {service_name} start')
 
 
 @task
@@ -276,7 +281,7 @@ def stop_service(service):
     """
     require('settings', provided_by=['production', 'staging'])
     service_name = _get_installed_service_name(service)
-    sudo('service %s stop' % service_name)
+    sudo(f'service {service_name} stop')
 
 
 @task
@@ -286,7 +291,7 @@ def restart_service(service):
     """
     require('settings', provided_by=['production', 'staging'])
     service_name = _get_installed_service_name(service)
-    sudo('service %s restart' % service_name)
+    sudo(f'service {service_name} restart')
 
 
 """
@@ -304,4 +309,6 @@ def fabcast(command):
     if not app_config.DEPLOY_TO_SERVERS:
         logging.error('You must set DEPLOY_TO_SERVERS = True in your app_config.py and setup a server before fabcasting.')
 
-    run('cd %s && bash run_on_server.sh fab %s $DEPLOYMENT_TARGET %s' % (app_config.SERVER_REPOSITORY_PATH, env.branch, command))
+    run(
+        f'cd {app_config.SERVER_REPOSITORY_PATH} && bash run_on_server.sh fab {env.branch} $DEPLOYMENT_TARGET {command}'
+    )

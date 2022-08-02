@@ -8,6 +8,7 @@ They will be exposed to users. Use environment variables instead.
 See get_secrets() below for a fast way to access them.
 """
 
+
 import logging
 import os
 
@@ -24,7 +25,7 @@ PROJECT_FILENAME = 'cardbuilder'
 # The name of the repository containing the source
 REPOSITORY_NAME = 'cardbuilder'
 GITHUB_USERNAME = 'nprapps'
-REPOSITORY_URL = 'git@github.com:%s/%s.git' % (GITHUB_USERNAME, REPOSITORY_NAME)
+REPOSITORY_URL = f'git@github.com:{GITHUB_USERNAME}/{REPOSITORY_NAME}.git'
 REPOSITORY_ALT_URL = None # 'git@bitbucket.org:nprapps/%s.git' % REPOSITORY_NAME'
 
 """
@@ -46,9 +47,9 @@ DEPLOY_TO_SERVERS = True
 
 SERVER_USER = 'ubuntu'
 SERVER_PYTHON = 'python3'
-SERVER_PROJECT_PATH = '/home/%s/apps/%s' % (SERVER_USER, PROJECT_FILENAME)
-SERVER_REPOSITORY_PATH = '%s/repository' % SERVER_PROJECT_PATH
-SERVER_VIRTUALENV_PATH = '%s/virtualenv' % SERVER_PROJECT_PATH
+SERVER_PROJECT_PATH = f'/home/{SERVER_USER}/apps/{PROJECT_FILENAME}'
+SERVER_REPOSITORY_PATH = f'{SERVER_PROJECT_PATH}/repository'
+SERVER_VIRTUALENV_PATH = f'{SERVER_PROJECT_PATH}/virtualenv'
 
 # Should the crontab file be installed on the servers?
 # If True, DEPLOY_TO_SERVERS must also be True
@@ -58,7 +59,7 @@ DEPLOY_CRONTAB = False
 # If True, DEPLOY_TO_SERVERS must also be True
 DEPLOY_SERVICES = True
 
-UWSGI_SOCKET_PATH = '/run/uwsgi/%s.uwsgi.sock' % PROJECT_FILENAME
+UWSGI_SOCKET_PATH = f'/run/uwsgi/{PROJECT_FILENAME}.uwsgi.sock'
 
 # Services are the server-side services we want to enable and configure.
 # A three-tuple following this format:
@@ -129,20 +130,20 @@ def configure_targets(deployment_target):
 
     if deployment_target == 'production':
         S3_BUCKET = PRODUCTION_S3_BUCKET
-        S3_BASE_URL = 'http://%s/%s' % (S3_BUCKET, PROJECT_SLUG)
-        S3_DEPLOY_URL = 's3://%s/%s' % (S3_BUCKET, PROJECT_SLUG)
+        S3_BASE_URL = f'http://{S3_BUCKET}/{PROJECT_SLUG}'
+        S3_DEPLOY_URL = f's3://{S3_BUCKET}/{PROJECT_SLUG}'
         SERVERS = PRODUCTION_SERVERS
-        SERVER_BASE_URL = 'http://%s/%s' % (SERVERS[0], PROJECT_SLUG)
-        SERVER_LOG_PATH = '/var/log/%s' % PROJECT_FILENAME
+        SERVER_BASE_URL = f'http://{SERVERS[0]}/{PROJECT_SLUG}'
+        SERVER_LOG_PATH = f'/var/log/{PROJECT_FILENAME}'
         LOG_LEVEL = logging.WARNING
         DEBUG = False
     elif deployment_target == 'staging':
         S3_BUCKET = STAGING_S3_BUCKET
-        S3_BASE_URL = 'http://%s/%s' % (S3_BUCKET, PROJECT_SLUG)
-        S3_DEPLOY_URL = 's3://%s/%s' % (S3_BUCKET, PROJECT_SLUG)
+        S3_BASE_URL = f'http://{S3_BUCKET}/{PROJECT_SLUG}'
+        S3_DEPLOY_URL = f's3://{S3_BUCKET}/{PROJECT_SLUG}'
         SERVERS = STAGING_SERVERS
-        SERVER_BASE_URL = 'http://%s/%s' % (SERVERS[0], PROJECT_SLUG)
-        SERVER_LOG_PATH = '/var/log/%s' % PROJECT_FILENAME
+        SERVER_BASE_URL = f'http://{SERVERS[0]}/{PROJECT_SLUG}'
+        SERVER_LOG_PATH = f'/var/log/{PROJECT_FILENAME}'
         LOG_LEVEL = logging.DEBUG
         DEBUG = False
     else:
@@ -150,7 +151,7 @@ def configure_targets(deployment_target):
         S3_BASE_URL = 'http://127.0.0.1:8000'
         S3_DEPLOY_URL = None
         SERVERS = []
-        SERVER_BASE_URL = 'http://127.0.0.1:8001/%s' % PROJECT_SLUG
+        SERVER_BASE_URL = f'http://127.0.0.1:8001/{PROJECT_SLUG}'
         SERVER_LOG_PATH = '/tmp'
         LOG_LEVEL = logging.DEBUG
         DEBUG = True

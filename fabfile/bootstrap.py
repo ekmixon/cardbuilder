@@ -26,8 +26,7 @@ def go(github_username=app_config.GITHUB_USERNAME, repository_name=None):
 
     logger.info('Setting up app config')
     config_files = ' '.join(['PROJECT_README.md', 'app_config.py', 'crontab'])
-    config = {}
-    config['$NEW_PROJECT_SLUG'] = os.getcwd().split('/')[-1]
+    config = {'$NEW_PROJECT_SLUG': os.getcwd().split('/')[-1]}
     config['$NEW_REPOSITORY_NAME'] = repository_name or config['$NEW_PROJECT_SLUG']
     config['$NEW_PROJECT_FILENAME'] = config['$NEW_PROJECT_SLUG'].replace('-', '_')
 
@@ -43,7 +42,10 @@ def go(github_username=app_config.GITHUB_USERNAME, repository_name=None):
     local('rm LICENSE')
     local('git add .')
     local('git commit -am "Initial import from app-template."')
-    local('git remote add origin git@github.com:%s/%s.git' % (github_username, config['$NEW_REPOSITORY_NAME']))
+    local(
+        f"git remote add origin git@github.com:{github_username}/{config['$NEW_REPOSITORY_NAME']}.git"
+    )
+
     local('git push -u origin master')
 
     chars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)'
